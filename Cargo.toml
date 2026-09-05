@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/blawdioh-engine", "crates/blawdioh-cli"]
+resolver = "2"
