@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::blinker::Blinker;
 
 mod blinker;
@@ -25,11 +27,14 @@ pub struct KeyFrame {
     eye: EyeState,
 }
 
-pub fn generate_keyframes(rms_frames: &[f32]) -> Vec<KeyFrame> {
-    let mut keyframes: Vec<KeyFrame> = Vec::with_capacity(rms_frames.len());
+pub fn generate_keyframes(path: &Path, fps: f64) -> Vec<KeyFrame> {
+    let samples = sampler::rms_at_fps(path, fps).unwrap();
+    let smoothed_samples = smooth(&samples, 0.5);
+
+    let mut keyframes: Vec<KeyFrame> = Vec::with_capacity(smoothed_samples.len());
     let mut blinker = Blinker::new();
 
-    for (frame, rms) in rms_frames.iter().enumerate() {
+    for (frame, rms) in smoothed_samples.iter().enumerate() {
         let eye = blinker.get_eye();
         let mouth = get_mouth(rms);
 
