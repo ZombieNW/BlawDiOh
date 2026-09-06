@@ -5,7 +5,7 @@ use crate::blinker::Blinker;
 mod blinker;
 mod sampler;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum MouthState {
     Closed,
     Small,
@@ -14,13 +14,14 @@ enum MouthState {
     Open,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum EyeState {
     Open,
     Blink,
     HalfBlink,
 }
 
+#[derive(Debug)]
 pub struct KeyFrame {
     frame: u32,
     mouth: MouthState,
