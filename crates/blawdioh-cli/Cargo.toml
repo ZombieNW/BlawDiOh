@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 blawdioh-engine = { path = "../blawdioh-engine" }
+blawdioh-render = { path = "../blawdioh-render" }
 clap = { version = "4.6.6", features = ["derive"] }

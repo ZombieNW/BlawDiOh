@@ -8,7 +8,7 @@ use crate::{
 mod eye;
 mod math;
 mod sampler;
-mod types;
+pub mod types;
 
 pub fn generate_keyframes(path: &Path, fps: f64) -> Vec<KeyFrame> {
     let samples = sampler::rms_at_fps(path, fps).unwrap();
