@@ -1,63 +1,27 @@
 use std::path::Path;
 
-use crate::blinker::Blinker;
+use crate::{
+    eye::Eye,
+    types::{KeyFrame, MouthFrame, MouthState},
+};
 
-mod blinker;
+mod eye;
 mod math;
 mod sampler;
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum MouthState {
-    Closed,
-    Small,
-    Half,
-    Wide,
-    Open,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum EyeState {
-    Open,
-    Blink,
-    HalfBlink,
-}
-
-#[derive(Debug)]
-pub struct MouthFrame {
-    offset_x: u32,
-    offset_y: u32,
-    state: MouthState,
-}
-
-#[derive(Debug)]
-pub struct EyeFrame {
-    offset_x: u32,
-    offset_y: u32,
-    state: EyeState,
-}
-
-#[derive(Debug)]
-pub struct KeyFrame {
-    frame: u32,
-    mouth: MouthFrame,
-    eye: EyeFrame,
-}
+mod types;
 
 pub fn generate_keyframes(path: &Path, fps: f64) -> Vec<KeyFrame> {
     let samples = sampler::rms_at_fps(path, fps).unwrap();
     let smoothed_samples = math::smooth(&samples, 0.5);
 
     let mut keyframes: Vec<KeyFrame> = Vec::with_capacity(smoothed_samples.len());
-    let mut blinker = Blinker::new();
+    let mut eye = Eye::new();
 
     for (frame, rms) in smoothed_samples.iter().enumerate() {
-        let eye = blinker.get_eye();
-        let mouth = get_mouth(rms);
-
         let keyframe = KeyFrame {
             frame: frame.try_into().unwrap(),
-            mouth: mouth,
-            eye: eye,
+            mouth: get_mouth(rms),
+            eye: eye.get_eye(),
         };
 
         keyframes.push(keyframe);

@@ -1,13 +1,13 @@
-use crate::{EyeFrame, EyeState};
+use crate::types::{EyeFrame, EyeState};
 
-pub struct Blinker {
+pub struct Eye {
     animation_frame: usize,
     cooldown: u32,
 }
 
 const BLINK_ANIMATION: [EyeState; 3] = [EyeState::HalfBlink, EyeState::Blink, EyeState::HalfBlink];
 
-impl Blinker {
+impl Eye {
     pub fn new() -> Self {
         Self {
             animation_frame: 0,
