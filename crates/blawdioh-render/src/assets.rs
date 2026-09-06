@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, fs::exists, path::Path};
+use std::{collections::HashMap, error::Error, path::Path};
 
 use blawdioh_engine::types::{EyeState, MouthState};
 use image::RgbaImage;

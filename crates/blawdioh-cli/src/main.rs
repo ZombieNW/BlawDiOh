@@ -1,6 +1,10 @@
 use blawdioh_render::{assets::load_assets, render_frame, save_image};
 use clap::Parser;
-use std::path::{Path, PathBuf, absolute};
+use indicatif::{ProgressBar, ProgressStyle};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 #[derive(Parser)]
 struct Cli {
@@ -14,27 +18,44 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
+    println!("Generating audio keyframes...");
+
     let keyframes = blawdioh_engine::generate_keyframes(&cli.path, cli.fps);
     let total = keyframes.len();
 
     println!("Total keyframes: {}", total);
 
+    if total == 0 {
+        return;
+    }
+
+    println!("Loading assets...");
+
     let assets_path = Path::new("./assets");
-    let absolute_assets = absolute(assets_path).unwrap();
-    println!("{}", absolute_assets.display());
+    let frames_dir = Path::new("./temp_frames");
+    fs::create_dir_all(frames_dir).expect("Failed to create output directory for frames");
 
-    let parent_dir = Path::new("./");
-    let absolute_parent = absolute(parent_dir).unwrap();
-    println!("{}", absolute_parent.display());
+    let asset_bundle = load_assets(&assets_path).expect("Failed to load assets");
 
-    let asset_bundle = load_assets(&assets_path).unwrap();
+    println!("Rendering...");
+
+    let progress_bar = ProgressBar::new(total as u64);
+    progress_bar.set_style(
+            ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} frames ({eta})")
+                .unwrap()
+                .progress_chars("#>-"),
+        );
 
     if total > 0 {
         for (i, keyframe) in keyframes.iter().enumerate() {
-            if i % 100 == 0 {
-                let _ = save_image(&render_frame(&asset_bundle, keyframe), parent_dir);
-                println!("Keyframe #{}: {:?}", i, keyframe);
-            }
+            let frame = render_frame(&asset_bundle, keyframe);
+            save_image(&frame, &frames_dir.join(format!("{}.png", i)))
+                .unwrap_or_else(|err| panic!("Failed to save frame {}: {:?}", i, err));
+
+            progress_bar.inc(1);
         }
     }
+
+    progress_bar.finish_with_message("Rendering complete!");
 }
