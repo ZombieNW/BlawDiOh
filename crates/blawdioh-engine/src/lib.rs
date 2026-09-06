@@ -3,6 +3,7 @@ use std::path::Path;
 use crate::blinker::Blinker;
 
 mod blinker;
+mod math;
 mod sampler;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -44,7 +45,7 @@ pub struct KeyFrame {
 
 pub fn generate_keyframes(path: &Path, fps: f64) -> Vec<KeyFrame> {
     let samples = sampler::rms_at_fps(path, fps).unwrap();
-    let smoothed_samples = smooth(&samples, 0.5);
+    let smoothed_samples = math::smooth(&samples, 0.5);
 
     let mut keyframes: Vec<KeyFrame> = Vec::with_capacity(smoothed_samples.len());
     let mut blinker = Blinker::new();
@@ -78,23 +79,4 @@ fn get_mouth(rms: &f32) -> MouthFrame {
         offset_y: 0,
         state,
     };
-}
-
-/// Smooths rms samples using "Exponential Moving Average"
-/// Alpha (0 -> 1) is responseiveness
-fn smooth(values: &[f32], alpha: f32) -> Vec<f32> {
-    if values.is_empty() {
-        return Vec::new();
-    }
-
-    let mut smoothed_values = Vec::with_capacity(values.len());
-    let mut current_smoothed = values[0];
-    smoothed_values.push(current_smoothed);
-
-    for &raw_value in values.iter().skip(1) {
-        current_smoothed = (alpha * raw_value) + ((1.0 - alpha) * current_smoothed);
-        smoothed_values.push(current_smoothed);
-    }
-
-    return smoothed_values;
 }
