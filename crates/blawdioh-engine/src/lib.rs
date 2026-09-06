@@ -59,7 +59,7 @@ fn get_mouth(rms: &f32) -> MouthState {
     }
 }
 
-/// Smooths a vector of RMS values using the Exponential Moving Average algorithm
+/// Smooths rms samples using "Exponential Moving Average"
 /// Alpha (0 -> 1) is responseiveness
 fn smooth(values: &[f32], alpha: f32) -> Vec<f32> {
     if values.is_empty() {
