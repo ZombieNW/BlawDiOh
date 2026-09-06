@@ -22,10 +22,24 @@ enum EyeState {
 }
 
 #[derive(Debug)]
+pub struct MouthFrame {
+    offset_x: u32,
+    offset_y: u32,
+    state: MouthState,
+}
+
+#[derive(Debug)]
+pub struct EyeFrame {
+    offset_x: u32,
+    offset_y: u32,
+    state: EyeState,
+}
+
+#[derive(Debug)]
 pub struct KeyFrame {
     frame: u32,
-    mouth: MouthState,
-    eye: EyeState,
+    mouth: MouthFrame,
+    eye: EyeFrame,
 }
 
 pub fn generate_keyframes(path: &Path, fps: f64) -> Vec<KeyFrame> {
@@ -50,14 +64,20 @@ pub fn generate_keyframes(path: &Path, fps: f64) -> Vec<KeyFrame> {
     return keyframes;
 }
 
-fn get_mouth(rms: &f32) -> MouthState {
-    match rms {
+fn get_mouth(rms: &f32) -> MouthFrame {
+    let state = match rms {
         x if *x < 0.05 => MouthState::Closed,
         x if *x < 0.2 => MouthState::Small,
         x if *x < 0.4 => MouthState::Half,
         x if *x < 0.6 => MouthState::Wide,
         _ => MouthState::Open,
-    }
+    };
+
+    return MouthFrame {
+        offset_x: 0,
+        offset_y: 0,
+        state,
+    };
 }
 
 /// Smooths rms samples using "Exponential Moving Average"

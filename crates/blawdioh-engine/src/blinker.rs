@@ -1,4 +1,4 @@
-use crate::EyeState;
+use crate::{EyeFrame, EyeState};
 
 pub struct Blinker {
     animation_frame: usize,
@@ -19,7 +19,17 @@ impl Blinker {
         rand::random_range(24..72)
     }
 
-    pub fn get_eye(&mut self) -> EyeState {
+    pub fn get_eye(&mut self) -> EyeFrame {
+        let state = self.get_state();
+
+        return EyeFrame {
+            offset_x: 0,
+            offset_y: 0,
+            state: state,
+        };
+    }
+
+    pub fn get_state(&mut self) -> EyeState {
         // run through already running animation
         if self.animation_frame < BLINK_ANIMATION.len() {
             let state = BLINK_ANIMATION[self.animation_frame];
