@@ -1,7 +1,6 @@
-use std::{collections::HashMap, error::Error, path::Path};
-
 use blawdioh_engine::types::{EyeState, MouthState};
 use image::RgbaImage;
+use std::{collections::HashMap, error::Error, path::Path};
 
 #[derive(Debug)]
 pub struct AssetBundle {

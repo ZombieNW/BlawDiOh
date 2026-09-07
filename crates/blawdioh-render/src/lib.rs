@@ -1,5 +1,6 @@
+use crate::assets::AssetBundle;
 use blawdioh_engine::types::KeyFrame;
-use image::{ImageResult, RgbaImage};
+use image::RgbaImage;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::prelude::*;
 use std::{
@@ -8,8 +9,6 @@ use std::{
     path::Path,
     process::{Child, Command, Stdio},
 };
-
-use crate::assets::AssetBundle;
 
 pub mod assets;
 
@@ -31,14 +30,17 @@ where
     let mut ffmpeg = spawn_ffmpeg(assets, audio_path, output_path, fps)?;
     let mut stdin = ffmpeg.stdin.take().ok_or("Failed to open FFmpeg stdin")?;
 
+    // Chunk frames to render in parallel
     let chunk_size = rayon::current_num_threads() * 4;
 
     for chunk in keyframes.chunks(chunk_size) {
+        // Generate frames in parallel
         let rendered_chunk: Vec<RgbaImage> = chunk
             .par_iter()
             .map(|keyframe| render_frame(assets, keyframe))
             .collect();
 
+        // Pipe frames to ffmpeg
         for frame in rendered_chunk {
             stdin.write_all(frame.as_raw())?;
             on_frame_rendered();
@@ -47,13 +49,13 @@ where
 
     drop(stdin);
 
+    // Check output for errors
     let output = ffmpeg.wait_with_output()?;
     if !output.status.success() {
-        let error_log = String::from_utf8_lossy(&output.stderr);
         return Err(format!(
             "FFmpeg failed with exit code {:?}:\n{}",
             output.status.code(),
-            error_log
+            String::from_utf8_lossy(&output.stderr)
         )
         .into());
     }
@@ -61,6 +63,7 @@ where
     Ok(())
 }
 
+/// Spawn ffmpeg child process
 fn spawn_ffmpeg(
     assets: &AssetBundle,
     audio_path: &Path,
@@ -103,9 +106,11 @@ fn spawn_ffmpeg(
         .spawn()
 }
 
+/// Generate face texture from keyframe
 pub fn render_frame(assets: &AssetBundle, keyframe: &KeyFrame) -> RgbaImage {
     let mut frame = assets.base_texture.clone();
 
+    // Overlay mouth texture onto base texture
     if let Some(mouth_sprite) = assets.mouths.get(&keyframe.mouth.state) {
         image::imageops::overlay(
             &mut frame,
@@ -115,6 +120,7 @@ pub fn render_frame(assets: &AssetBundle, keyframe: &KeyFrame) -> RgbaImage {
         );
     }
 
+    // Overlay eyes texture onto base texture
     if let Some(eye_sprite) = assets.eyes.get(&keyframe.eye.state) {
         image::imageops::overlay(
             &mut frame,
@@ -125,8 +131,4 @@ pub fn render_frame(assets: &AssetBundle, keyframe: &KeyFrame) -> RgbaImage {
     }
 
     return frame;
-}
-
-pub fn save_image(image: &RgbaImage, path: &Path) -> ImageResult<()> {
-    image.save(path)
 }
