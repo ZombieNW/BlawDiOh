@@ -1,5 +1,5 @@
-/// Smooths rms samples using "Exponential Moving Average"
-/// Alpha (0 -> 1) is responseiveness
+/// Smooths samples via "Exponential Moving Average"
+/// Alpha (0.0 -> 1.0) is responseiveness
 pub fn smooth(values: &[f32], alpha: f32) -> Vec<f32> {
     if values.is_empty() {
         return Vec::new();

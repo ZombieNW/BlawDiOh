@@ -1,5 +1,4 @@
 use std::{error::Error, fs::File, path::Path};
-
 use symphonia::core::{
     codecs::audio::AudioDecoderOptions,
     formats::{FormatOptions, TrackType, probe::Hint},
@@ -7,16 +6,35 @@ use symphonia::core::{
     meta::MetadataOptions,
 };
 
+/// Chunks audio into rms samples at a specific fps
 pub fn rms_at_fps(path: &Path, fps: f64) -> Result<Vec<f32>, Box<dyn Error>> {
     let (samples, sample_rate) = decode_audio(path)?;
     Ok(chunk_into_rms(&samples, sample_rate, fps))
 }
 
-fn decode_audio(path: &Path) -> Result<(Vec<f32>, u32), Box<dyn std::error::Error>> {
+/// Chunks audio samples into rms samples at a specific fps
+fn chunk_into_rms(samples: &[f32], sample_rate: u32, fps: f64) -> Vec<f32> {
+    if samples.is_empty() {
+        return Vec::new();
+    }
+
+    let samples_per_frame = ((sample_rate as f64 / fps).round() as usize).max(1);
+    return samples
+        .chunks(samples_per_frame)
+        .map(|chunk| {
+            // Calculate rms over the chunk interval
+            let sum_sqared = chunk.iter().map(|sample| sample * sample).sum::<f32>();
+            return (sum_sqared / chunk.len() as f32).sqrt();
+        })
+        .collect();
+}
+
+/// Decodes audio into f32 samples & sample rate
+fn decode_audio(path: &Path) -> Result<(Vec<f32>, u32), Box<dyn Error>> {
     let file = File::open(path)?;
     let mss = MediaSourceStream::new(Box::new(file), Default::default());
 
-    // figure out what file type it is based on extension
+    // Assume audio format from extension
     let mut hint = Hint::new();
     if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
         hint.with_extension(ext);
@@ -32,7 +50,7 @@ fn decode_audio(path: &Path) -> Result<(Vec<f32>, u32), Box<dyn std::error::Erro
 
     let track = format
         .default_track(TrackType::Audio)
-        .ok_or("no audio track found")?;
+        .ok_or("No audio track found")?;
 
     let track_id = track.id;
     let codec_params = track.codec_params.clone().ok_or("missing track codec")?;
@@ -45,7 +63,7 @@ fn decode_audio(path: &Path) -> Result<(Vec<f32>, u32), Box<dyn std::error::Erro
     let mut mono_samples: Vec<f32> = Vec::new();
     let mut sample_buf: Vec<f32> = Vec::new();
 
-    // cycle through each packet
+    // Cyle through each audio packet
     loop {
         match format.next_packet() {
             Ok(packet) => {
@@ -67,8 +85,8 @@ fn decode_audio(path: &Path) -> Result<(Vec<f32>, u32), Box<dyn std::error::Erro
                 sample_buf.clear();
             }
             Err(e) => {
-                if let symphonia::core::errors::Error::IoError(ref io_err) = e {
-                    if io_err.kind() == std::io::ErrorKind::UnexpectedEof {
+                if let symphonia::core::errors::Error::IoError(ref io_error) = e {
+                    if io_error.kind() == std::io::ErrorKind::UnexpectedEof {
                         break;
                     }
                 }
@@ -78,19 +96,4 @@ fn decode_audio(path: &Path) -> Result<(Vec<f32>, u32), Box<dyn std::error::Erro
     }
 
     Ok((mono_samples, sample_rate))
-}
-
-fn chunk_into_rms(samples: &[f32], sample_rate: u32, fps: f64) -> Vec<f32> {
-    if samples.is_empty() {
-        return Vec::new();
-    }
-
-    let samples_per_frame = ((sample_rate as f64 / fps).round() as usize).max(1);
-    return samples
-        .chunks(samples_per_frame)
-        .map(|chunk| {
-            let sum_sq = chunk.iter().map(|s| s * s).sum::<f32>();
-            (sum_sq / chunk.len() as f32).sqrt()
-        })
-        .collect();
 }
