@@ -8,3 +8,7 @@ blawdioh-engine = { path = "../blawdioh-engine" }
 blawdioh-render = { path = "../blawdioh-render" }
 clap = { version = "4.6.6", features = ["derive"] }
 indicatif = "0.18.6"
+
+[[bin]]
+name = "blawdioh"
+path = "src/main.rs"
