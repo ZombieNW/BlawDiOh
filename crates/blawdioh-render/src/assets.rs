@@ -15,26 +15,26 @@ pub fn load_assets(dir: &Path) -> Result<AssetBundle, Box<dyn Error>> {
         .expect("Base texture not found")
         .to_rgba8();
 
+    // load/build mouth texture hashmap
     let mut mouths = HashMap::new();
     let mouth_dir = dir.join("mouths");
-
     for state in MouthState::ALL {
-        let file_path = mouth_dir.join(format!("{}.png", state.filename_stem()));
-        let sprite = image::open(&file_path)
+        let path = mouth_dir.join(format!("{}.png", state.filename_stem()));
+        let texture = image::open(&path)
             .expect("Mouth texture not found")
             .to_rgba8();
-        mouths.insert(state, sprite);
+        mouths.insert(state, texture);
     }
 
+    // load/build eye texture hashmap
     let mut eyes = HashMap::new();
     let eye_dir = dir.join("eyes");
-
     for state in EyeState::ALL {
-        let file_path = eye_dir.join(format!("{}.png", state.filename_stem()));
-        let sprite = image::open(&file_path)
-            .expect("Eye texture not found")
+        let path = eye_dir.join(format!("{}.png", state.filename_stem()));
+        let texture = image::open(&path)
+            .expect("Mouth texture not found")
             .to_rgba8();
-        eyes.insert(state, sprite);
+        eyes.insert(state, texture);
     }
 
     Ok(AssetBundle {
