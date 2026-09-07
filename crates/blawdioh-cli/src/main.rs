@@ -1,7 +1,7 @@
 use blawdioh_render::assets::load_assets;
 use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
-use std::path::{Path, PathBuf};
+use std::{env, path::PathBuf};
 
 #[derive(Parser)]
 struct Cli {
@@ -18,6 +18,15 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
+    // Get proper paths for everything
+    let exe_dir = env::current_exe()
+        .expect("Failed to get executable path")
+        .parent()
+        .expect("Failed to get executable directory")
+        .to_path_buf();
+    let assets_dir = exe_dir.join("assets");
+    let output_path = &cli.output;
+
     println!("Generating audio keyframes...");
     let keyframes = blawdioh_engine::generate_keyframes(&cli.path, cli.fps);
     println!("Total keyframes: {}", keyframes.len());
@@ -27,7 +36,7 @@ fn main() {
     }
 
     println!("Loading assets...");
-    let assets = load_assets(Path::new("./assets")).expect("Failed to load assets");
+    let assets = load_assets(&assets_dir).expect("Failed to load assets");
 
     println!("Rendering...");
     let progress_bar = ProgressBar::new(keyframes.len() as u64);
@@ -38,11 +47,16 @@ fn main() {
             .progress_chars("█░ "),
     );
 
-    blawdioh_render::render_video(&assets, &keyframes, &cli.path, &cli.output, cli.fps, || {
-        progress_bar.inc(1)
-    })
+    blawdioh_render::render_video(
+        &assets,
+        &keyframes,
+        &cli.path,
+        &output_path,
+        cli.fps,
+        || progress_bar.inc(1),
+    )
     .expect("Failed to render video");
 
     progress_bar.finish_with_message("Rendering complete!");
-    println!("Saved video to {}", cli.output.display());
+    println!("Saved video to {}", output_path.display());
 }
