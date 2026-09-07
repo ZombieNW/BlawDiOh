@@ -4,6 +4,7 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::prelude::*;
 use std::{
     error::Error,
+    io::Write,
     path::Path,
     process::{Child, Command, Stdio},
 };
@@ -28,7 +29,7 @@ where
     }
 
     let mut ffmpeg = spawn_ffmpeg(assets, audio_path, output_path, fps)?;
-    let stdin = ffmpeg.stdin.take().ok_or("Failed to open FFmpeg stdin")?;
+    let mut stdin = ffmpeg.stdin.take().ok_or("Failed to open FFmpeg stdin")?;
 
     let chunk_size = rayon::current_num_threads() * 4;
 
@@ -38,12 +39,24 @@ where
             .map(|keyframe| render_frame(assets, keyframe))
             .collect();
 
-        for _frame in rendered_chunk {
+        for frame in rendered_chunk {
+            stdin.write_all(frame.as_raw())?;
             on_frame_rendered();
         }
     }
 
     drop(stdin);
+
+    let output = ffmpeg.wait_with_output()?;
+    if !output.status.success() {
+        let error_log = String::from_utf8_lossy(&output.stderr);
+        return Err(format!(
+            "FFmpeg failed with exit code {:?}:\n{}",
+            output.status.code(),
+            error_log
+        )
+        .into());
+    }
 
     Ok(())
 }
