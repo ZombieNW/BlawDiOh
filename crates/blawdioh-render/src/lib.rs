@@ -4,7 +4,6 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::prelude::*;
 use std::{
     error::Error,
-    io::{Read, Write},
     path::Path,
     process::{Child, Command, Stdio},
 };
