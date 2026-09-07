@@ -57,6 +57,7 @@ impl MouthState {
 
 impl EyeState {
     pub const ALL: [EyeState; 3] = [EyeState::Open, EyeState::Blink, EyeState::HalfBlink];
+    pub const BLINK: [EyeState; 3] = [EyeState::HalfBlink, EyeState::Blink, EyeState::HalfBlink];
 
     pub fn filename_stem(&self) -> &'static str {
         match self {
