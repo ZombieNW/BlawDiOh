@@ -20,10 +20,9 @@ fn main() {
 
     println!("Generating audio keyframes...");
     let keyframes = blawdioh_engine::generate_keyframes(&cli.path, cli.fps);
-    let total = keyframes.len();
+    println!("Total keyframes: {}", keyframes.len());
 
-    println!("Total keyframes: {}", total);
-    if total == 0 {
+    if keyframes.is_empty() {
         return;
     }
 
@@ -31,7 +30,7 @@ fn main() {
     let assets = load_assets(Path::new("./assets")).expect("Failed to load assets");
 
     println!("Rendering...");
-    let progress_bar = ProgressBar::new(total as u64);
+    let progress_bar = ProgressBar::new(keyframes.len() as u64);
     progress_bar.set_style(
         ProgressStyle::default_bar()
             .template("[{bar:40.cyan/blue}] {pos}/{len} frames ({eta} remaining)")
