@@ -25,7 +25,6 @@ fn main() {
         .expect("Failed to get executable directory")
         .to_path_buf();
     let assets_dir = exe_dir.join("assets");
-    let output_path = &cli.output;
 
     println!("Generating audio keyframes...");
     let keyframes = blawdioh_engine::generate_keyframes(&cli.path, cli.fps);
@@ -47,16 +46,11 @@ fn main() {
             .progress_chars("█░ "),
     );
 
-    blawdioh_render::render_video(
-        &assets,
-        &keyframes,
-        &cli.path,
-        &output_path,
-        cli.fps,
-        || progress_bar.inc(1),
-    )
+    blawdioh_render::render_video(&assets, &keyframes, &cli.path, &cli.output, cli.fps, || {
+        progress_bar.inc(1)
+    })
     .expect("Failed to render video");
 
     progress_bar.finish_with_message("Rendering complete!");
-    println!("Saved video to {}", output_path.display());
+    println!("Saved video to {}", &cli.output.display());
 }
