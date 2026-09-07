@@ -16,7 +16,7 @@ This codebase is split into three Rust crates, `blawdioh-cli`, `blawdioh-engine`
 
 #### `blawdioh-cli`
 
-A lightweight cli. It makes `blawdioh-engine` generate keyframes and `blawdioh-render` render them into a video.
+A lightweight cli. It makes `blawdioh-engine` generate keyframes and `blawdioh-render` render them into a video. On build, it copies the root `/assets` directory to the target output folder.
 
 #### `blawdioh-engine`
 
