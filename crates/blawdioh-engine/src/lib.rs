@@ -19,8 +19,8 @@ pub fn generate_keyframes(path: &Path, fps: f64) -> Vec<KeyFrame> {
     for (frame, rms) in smoothed_samples.iter().enumerate() {
         let keyframe = KeyFrame {
             frame: frame.try_into().unwrap(),
-            mouth: mouth.get_mouth(rms),
-            eye: eye.get_eye(),
+            mouth: mouth.get_mouth(rms, frame),
+            eye: eye.get_eye(frame),
         };
 
         keyframes.push(keyframe);
