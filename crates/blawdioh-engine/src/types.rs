@@ -33,6 +33,7 @@ pub struct KeyFrame {
     pub frame: u32,
     pub mouth: MouthFrame,
     pub eye: EyeFrame,
+    pub asset_bundle: &AssetBundle,
 }
 
 impl MouthState {
